@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="ca">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Inici de Sessió</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        text-align: center;
+      }
+      #auth-container {
+        margin: 20px;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="auth-container">
+      <h2>Inici de sessió</h2>
+      <input type="text" id="username" placeholder="Nom d'usuari" />
+      <input type="password" id="password" placeholder="Contrasenya" />
+      <button onclick="login()">Inicia sessió</button>
+      <p id="message"></p>
+    </div>
+
+    <script>
+      // Dades dels usuaris i contrasenyes integrades directament al codi
+      var users = ["usuari1", "usuari2", "usuari3"];
+      var passwords = {
+        usuari1: "contrasenya1",
+        usuari2: "contrasenya2",
+        usuari3: "contrasenya3",
+      };
+
+      function login() {
+        var username = document.getElementById("username").value;
+        var password = document.getElementById("password").value;
+
+        // Comprovar si l'usuari existeix i si la contrasenya és correcta
+        if (users.includes(username) && passwords[username] === password) {
+          // Redirigir a la pàgina inici.html si tot és correcte
+          window.location.href = "inici.html";
+        } else {
+          document.getElementById("message").innerText =
+            "Nom d'usuari o contrasenya incorrectes.";
+        }
+      }
+    </script>
+  </body>
+</html>

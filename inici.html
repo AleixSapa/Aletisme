@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="ca">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Joc d'Atletisme</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        text-align: center;
+      }
+      #menu-container {
+        margin: 20px;
+      }
+      button {
+        font-size: 20px;
+        padding: 10px;
+        margin: 10px;
+      }
+      #game-container {
+        margin: 20px;
+      }
+      canvas {
+        border: 1px solid black;
+        background-color: lightgray;
+      }
+      #stamina-bar {
+        width: 200px;
+        height: 20px;
+        background-color: red;
+        margin: 10px auto;
+      }
+      #coin-count {
+        font-size: 20px;
+        font-weight: bold;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="menu-container">
+      <h1>Benvingut a la pàgina principal!</h1>
+      <p>Monedes disponibles: <span id="coin-count">0</span></p>
+      <button onclick="selectRace('carreraGratis')">Cursa Gratuïta</button>
+      <button onclick="selectRace('carrera1')">Cursa 1 (100 monedes)</button>
+      <button onclick="selectRace('carrera2')">Cursa 2 (150 monedes)</button>
+      <button onclick="selectTournament()">Torneig (300 monedes)</button>
+      <button onclick="startGame()">Inicia una nova cursa</button>
+    </div>
+
+    <div id="game-container" style="display: none">
+      <h1>Cursa d'Atletisme</h1>
+      <p>Monedes: <span id="coin-count-game">0</span></p>
+      <div id="stamina-bar"></div>
+      <canvas id="gameCanvas" width="450" height="250"></canvas>
+      <p>Prem la tecla 'A' per córrer!</p>
+    </div>
+
+    <script>
+      // Carregar les dades des de localStorage (si existeixen)
+      let coins = parseInt(localStorage.getItem("coins")) || 0;
+      document.getElementById("coin-count").innerText = coins;
+      document.getElementById("coin-count-game").innerText = coins;
+
+      let running = false;
+      let stamina = 100;
+      let speed = 0;
+      let playerX = 50;
+      let playerY = 125;
+      let startTime;
+      let raceSelected = null;
+
+      // Funció per seleccionar una cursa o torneig
+      function selectRace(raceType) {
+        if (raceType === "carreraGratis") {
+          raceSelected = "carreraGratis";
+          alert("Has seleccionat la Cursa Gratuïta!");
+        } else if (raceType === "carrera1" && coins >= 100) {
+          coins -= 100;
+          raceSelected = "carrera1";
+          localStorage.setItem("coins", coins);
+          alert("Has seleccionat Cursa 1!");
+        } else if (raceType === "carrera2" && coins >= 150) {
+          coins -= 150;
+          raceSelected = "carrera2";
+          localStorage.setItem("coins", coins);
+          alert("Has seleccionat Cursa 2!");
+        } else if (raceType === "torneig" && coins >= 300) {
+          coins -= 300;
+          raceSelected = "torneig";
+          localStorage.setItem("coins", coins);
+          alert("Has seleccionat el Torneig!");
+        } else {
+          alert("No tens suficients monedes per seleccionar aquesta opció.");
+        }
+        document.getElementById("coin-count").innerText = coins;
+        document.getElementById("coin-count-game").innerText = coins;
+      }
+
+      function selectTournament() {
+        if (coins >= 300) {
+          coins -= 300;
+          raceSelected = "torneig";
+          localStorage.setItem("coins", coins);
+          alert("Has seleccionat el Torneig!");
+          document.getElementById("coin-count").innerText = coins;
+          document.getElementById("coin-count-game").innerText = coins;
+        } else {
+          alert("No tens suficients monedes per seleccionar el Torneig.");
+        }
+      }
+
+      // Funció per iniciar el joc de la cursa
+      function startGame() {
+        if (raceSelected === null) {
+          alert("Selecciona una cursa o torneig abans de començar.");
+          return;
+        }
+
+        document.getElementById("menu-container").style.display = "none";
+        document.getElementById("game-container").style.display = "block";
+        startRace();
+      }
+
+      // Funció per iniciar la cursa
+      function startRace() {
+        let canvas = document.getElementById("gameCanvas");
+        let ctx = canvas.getContext("2d");
+        startTime = Date.now();
+
+        document.addEventListener("keydown", function (event) {
+          if (event.key === "a" && stamina > 0) {
+            running = true;
+          }
+        });
+
+        document.addEventListener("keyup", function (event) {
+          if (event.key === "a") {
+            running = false;
+          }
+        });
+
+        function updateGame() {
+          if (running && stamina > 0) {
+            speed = 2;
+            stamina -= 1;
+          } else {
+            speed = 1;
+            if (stamina < 100) stamina += 0.5;
+          }
+
+          playerX += speed;
+
+          ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+          // Dibuixar la boleta vermella
+          ctx.beginPath();
+          ctx.arc(playerX, playerY, 15, 0, Math.PI * 2);
+          ctx.fillStyle = "red";
+          ctx.fill();
+          ctx.closePath();
+
+          let staminaBar = document.getElementById("stamina-bar");
+          staminaBar.style.width = stamina * 2 + "px";
+          staminaBar.style.backgroundColor =
+            stamina < 30 ? "orange" : stamina < 10 ? "red" : "green"; // Canviar el color de la barra d'estamina segons el valor
+
+          if (playerX >= canvas.width) {
+            endGame();
+            return;
+          }
+
+          requestAnimationFrame(updateGame);
+        }
+
+        updateGame();
+      }
+
+      // Funció per finalitzar el joc
+      function endGame() {
+        let endTime = Date.now();
+        let elapsedTime = (endTime - startTime) / 1000;
+        let earnedCoins = 0;
+
+        // Si és una cursa gratuïta, no es guanyen monedes
+        if (raceSelected !== "carreraGratis") {
+          earnedCoins = Math.max(10 - Math.floor(elapsedTime), 1);
+          coins += earnedCoins;
+          localStorage.setItem("coins", coins);
+        }
+
+        alert(
+          `Has acabat la cursa en ${elapsedTime.toFixed(
+            2
+          )} segons! Has guanyat ${earnedCoins} monedes!`
+        );
+        document.getElementById("coin-count-game").innerText = coins;
+
+        document.getElementById("game-container").style.display = "none";
+        document.getElementById("menu-container").style.display = "block";
+      }
+    </script>
+  </body>
+</html>
